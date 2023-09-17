@@ -148,6 +148,8 @@ struct Person:
 
 person = Person.from_json(data)
 ```
+This is the same as if someone created a specific file called `Person.ag` and put `from_json` in it.
+
 A struct can also have functions bound to an instance of it, these are methods.
 To declare a method, simply define a function within a struct's body with its first parameter as `self`
 ```crystal
