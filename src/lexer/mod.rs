@@ -5,11 +5,15 @@ use crate::span::Span;
 use self::rules::LexerRule;
 mod rules;
 
+#[cfg(test)]
+mod test;
+
 pub struct Token {
     pub kind: TokenKind,
     pub span: Span,
 }
 
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum TokenKind {
     Identifier(Rc<str>),
     IntegerLiteral(Rc<str>),
