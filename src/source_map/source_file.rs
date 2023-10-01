@@ -7,7 +7,7 @@ use super::{module_path::{self, ModulePath}, BytePos, deferred::DeferredSourceFi
 ///referenced freely. This also contains the start of the file according to the absolute
 ///positioning system of the [super::SourceMap], which will be provided by the source map when a new
 ///[SourceFile] is created from a [super::deferred::DeferredSourceFile] object.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceCode{
     ///The start of the source file as an absolute position in the entire source map
     start: BytePos,
@@ -16,7 +16,7 @@ pub struct SourceCode{
     ///The source code itself wrapped in an Rc for distributing 
     ///
     ///The source code here cannot be borrowed when nothing else owns it
-    content: Rc<str>
+    pub content: Rc<str>
 }
 
 impl SourceCode{

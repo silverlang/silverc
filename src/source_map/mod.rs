@@ -1,8 +1,8 @@
-use std::{sync::Arc, collections::HashMap, path::Path, hash::{Hash, Hasher}};
+use std::{sync::Arc, collections::HashMap, path::{Path, self}, hash::{Hash, Hasher}, env::join_paths};
 
-use crate::tree::{Tree, walk::TreeWalk};
+use crate::{tree::{Tree, walk::TreeWalk}, source_map::source_file::SourceCode};
 
-use self::{deferred::DeferredSourceFile, source_file::SourceFile};
+use self::{deferred::DeferredSourceFile, source_file::SourceFile, module_path::ModulePath};
 
 pub mod deferred;
 pub mod module_path;
@@ -124,4 +124,23 @@ impl SourceMap{
         }
         file
     }
+}
+
+#[test]
+pub fn test_source_map(){
+    let cwd = std::env::current_dir().unwrap();
+    let src = cwd.join("src");
+    let mut source_map = SourceMap::new(src).unwrap();
+    let main = source_map.get_module(ModulePath::new("main.rs", Some(ModulePath::new("src", None))));
+    assert!(main.is_some());
+    let expected = source_file::SourceFile{ 
+        module_path: ModulePath::new("src/main.rs", Some(ModulePath::new("src", None))),
+        source_code: SourceCode::new(0, "pub mod tree;\npub mod source_map;\n\nfn main() {\n    println!(\"Hello, world!\");\n}\n".into()).into() 
+    };
+    let main = main.unwrap();
+    assert!(main.module_path == expected.module_path);
+    assert!(main.source_code.is_some());
+    let source_code = main.source_code.unwrap();
+    let exp_source_code = expected.source_code.unwrap();
+    assert!(source_code == exp_source_code, "Expected: {0}\nGo instead: {1}", exp_source_code.content, source_code.content);
 }
