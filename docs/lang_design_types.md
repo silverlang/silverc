@@ -2,28 +2,41 @@
 
 ## Basic types
 
-- `int8/int16/int32/int64` - A signed integer that is 8, 16, 32 and 64 bits long, respectively.
-- `uint8/uint16/uint32/uint64` - An unsigned integer.
-- `int` - A type alias for `int32`. 
-- `uint` - A type alias for `uint32`.
-- `bool` - Boolean type. Literal names are `True` and `False`.
-- `float` - A floating number that is 64 bits long.
-
-- `str` - String type. # TODO: clarify string type more
+- `int` - This maps directly to the wasm type `i32` 
+- `int64` - This maps directly to the wasm type `i64`
+- `bool` - Boolean type. Literal names are `True` and `False`. In WASM, booleans are just integers `0` and `1`
+- `float` - This maps directly to the wasm type `f32`
+- `float64` - This maps directly to the wasm type `f64`
 
 ## Compound types
 
-- Tuple type. A tuple can never grow or shrink in size once created. The values (or references) inside a tuple cannot be changed.
-    - Example of a tuple with 3 elements: `(T, U, V)`
-    - Example of a tuple with a certain length: `(T: 5)`
-- `list` - A mutable array type with elements of the same type.
-    -  Type syntax: `list[T]`
-- `dict` - A collection of key-value pairs.
-    -  Type syntax: `dict[T, U]`
+- `Tuple` type. 
+    - A tuple can never grow or shrink in size once created. The values (or references) inside a tuple cannot be changed.
+        - Example of a tuple with 3 elements: `(T, U, V)`
+        - Example of a tuple with a certain length: `(T: 5)`
+- `Struct` type
+    - A struct can be declared as a new compound type which will be put on the stack
+        - Example
+        ```crystal
+        struct Client:
+            socket: socket.Socket 
+            messages: List[String]
+        ```
+- `String` type 
+    - In WASM, a string is not a primitive, so we must find a way to separate string literals and string types.
+    - A solution to this would be to write the String type in the core library to use a memory buffer
+        and put literals somewhere in the binary (maybe the data section)
+        - TODO: Learn more about how the data section works so we can statically store string literals
+
+- `Array` type 
+    - WASM has a different way to handle arrays, unlike with machine level assembler languages
+    - Question: Perhaps, due to the lack of array support in WASM, should we instead use the core library to implement a List type?
+    - TODO: Write some experimental code to find out how we could possibly implement an array primitive for WASM
 
 ## Other types
 
 - `Self` - Used in method function signatures, and refers to the struct that owns the method.
+- `Memory` - Used to invoke the [*bulk memory operations*](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format#bulk_memory_operations)
 
 ## Generics
 Generics abstract over types in functions and structs when the data type is not known at compile time.
@@ -37,23 +50,28 @@ def create_list[T](size: uint) -> List[T]:
 # struct generics
 struct List[T]:
     buffer: MemBuf = MemBuf(1024 * 1024 * 1024)
-    capacity: uint = 0
-    size: uint
+    capacity: int = 0
+    size: int
 
-struct Mapping[T, U]:
+struct Map[T, U]:
     key: T
     value: U
+    capacity: int = 0
+    size: int
 ```
 
 ### Generic constraints
 Generics can have constraints to limit which types are acceptable.
 
 ```crystal
-def subtract[T: Signed](a: T, b: T) -> T: # will accept all int (not uint) types
-    return a + b
+struct Iterator[I, T: Collection[I]]:
+    subject: T
+    item: I
 
-def add[T: Ordered](a: T, b: T) -> T: # will accept all int, uint, and float types
-    return a + b
+    def map[R](self, transform: def(I) -> R) -> Map[R]:
+        mapper = Map()
+        mapper.apply(transform)
+        return mapper
 ```
 
 ## Function types
@@ -69,6 +87,6 @@ def subtract_num(subtrahend: int) -> def(int) -> int:
 Type aliases are declared similarly to regular variables, with the `type` prefix keyword.
 
 ```crystal
-type AsciiChar = uint8
+type AsciiChar = int
 type Callback = def(TcpListener, str) -> TcpResult
 ```
