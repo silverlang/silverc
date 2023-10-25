@@ -8,6 +8,24 @@ mod test {
 
         let output_toks: Vec<Token> = lexer.collect();
 
+        for i in 0..expected_kinds.len() {
+            if output_toks.len() <= i {
+                panic!(
+                    "wrong len. expected={}, got={}",
+                    expected_kinds.len(),
+                    output_toks.len(),
+                );
+            }
+
+            println!("{:?} -- {:?}", expected_kinds[i], output_toks[i].kind);
+
+            assert_eq!(
+                expected_kinds[i], output_toks[i].kind,
+                "tests[{}] - token kind wrong. expected={:?}, got={:?}",
+                i, expected_kinds[i], output_toks[i].kind,
+            );
+        }
+
         assert_eq!(
             expected_kinds.len(),
             output_toks.len(),
@@ -15,15 +33,6 @@ mod test {
             expected_kinds.len(),
             output_toks.len(),
         );
-
-        for i in 0..expected_kinds.len() {
-            println!("{:?} -- {:?}", expected_kinds[i], output_toks[i].kind);
-            assert_eq!(
-                expected_kinds[i], output_toks[i].kind,
-                "tests[{}] - token kind wrong. expected={:?}, got={:?}",
-                i, expected_kinds[i], output_toks[i].kind,
-            );
-        }
     }
 
     // TODO: Add test function for testing spans and not just TokenKind
