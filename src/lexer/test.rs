@@ -212,7 +212,7 @@ print(one)"#;
             tk::Identifier("_valid".into()),
             tk::Identifier("__valid".into()),
             tk::Identifier("v4l1d".into()),
-            tk::Identifier("valid_also".into()),
+            tk::Identifier("valid_als0".into()),
             tk::Unknown,
         ];
 
