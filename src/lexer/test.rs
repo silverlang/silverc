@@ -8,11 +8,21 @@ mod test {
 
         let output_toks: Vec<Token> = lexer.collect();
 
-        assert_eq!(expected_kinds.len(), output_toks.len());
+        assert_eq!(
+            expected_kinds.len(),
+            output_toks.len(),
+            "wrong len. expected={}, got={}",
+            expected_kinds.len(),
+            output_toks.len(),
+        );
 
         for i in 0..expected_kinds.len() {
             println!("{:?} -- {:?}", expected_kinds[i], output_toks[i].kind);
-            assert_eq!(expected_kinds[i], output_toks[i].kind);
+            assert_eq!(
+                expected_kinds[i], output_toks[i].kind,
+                "tests[{}] - token kind wrong. expected={:?}, got={:?}",
+                i, expected_kinds[i], output_toks[i].kind,
+            );
         }
     }
 
