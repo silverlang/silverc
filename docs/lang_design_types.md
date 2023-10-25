@@ -2,13 +2,13 @@
 
 ## Basic types
 
-- `int` - This maps directly to the wasm type `i32` , signed
-- `int64` - This maps directly to the wasm type `i64`, signed
-- `uint` - This maps directly to the wasm type `i32` , unsigned
-- `uint64` - This maps directly to the wasm type `i64`, unsigned
-- `bool` - Boolean type. Literal names are `True` and `False`. In WASM, booleans are just integers `0` and `1`
-- `float` - This maps directly to the wasm type `f32`
-- `float64` - This maps directly to the wasm type `f64`
+- `int` - This maps directly to the Wasm type `i32` , signed
+- `int64` - This maps directly to the Wasm type `i64`, signed
+- `uint` - This maps directly to the Wasm type `i32` , unsigned
+- `uint64` - This maps directly to the Wasm type `i64`, unsigned
+- `bool` - Boolean type. Literal names are `True` and `False`. In Wasm, booleans are just integers `0` and `1`
+- `float` - This maps directly to the Wasm type `f32`
+- `float64` - This maps directly to the Wasm type `f64`
 
 ## Compound types
 
@@ -25,15 +25,15 @@
             messages: List[String]
         ```
 - `String` type 
-    - In WASM, a string is not a primitive, so we must find a way to separate string literals and string types.
+    - In Wasm, a string is not a primitive, so we must find a way to separate string literals and string types.
     - A solution to this would be to write the String type in the core library to use a memory buffer
         and put literals somewhere in the binary (maybe the data section)
         - TODO: Learn more about how the data section works so we can statically store string literals
 
 - `Array` type 
-    - WASM has a different way to handle arrays, unlike with machine level assembler languages
-    - Question: Perhaps, due to the lack of array support in WASM, should we instead use the core library to implement a List type?
-    - TODO: Write some experimental code to find out how we could possibly implement an array primitive for WASM
+    - Wasm has a different way to handle arrays, unlike with machine level assembler languages
+    - Question: Perhaps, due to the lack of array support in Wasm, should we instead use the core library to implement a List type?
+    - TODO: Write some experimental code to find out how we could possibly implement an array primitive for Wasm
 
 ## Other types
 
