@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, str::Chars};
+use std::str::Chars;
 
 use crate::span::Span;
 
@@ -15,12 +15,14 @@ pub struct Token {
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum TokenKind {
-    Identifier(Rc<str>),
-    IntegerLiteral(Rc<str>),
-    StringLiteral(Rc<str>),
+    Identifier(String),
+    IntegerLiteral(String),
+    StringLiteral(String),
 
     /// \n
     NewLine,
+
+    NL,
 
     Indent,
 
