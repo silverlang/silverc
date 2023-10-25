@@ -31,7 +31,7 @@ mod test {
     #[test]
     fn math_tokens() {
         let src = "+-*/";
-        let kinds = &[tk::Plus, tk::Minus, tk::Star, tk::Slash];
+        let kinds = &[tk::Plus, tk::Minus, tk::Star, tk::Slash, tk::NewLine];
 
         compare_tokens(kinds, src);
     }
@@ -64,6 +64,7 @@ mod test {
             tk::Greater,
             tk::Not,
             tk::At,
+            tk::NewLine,
         ];
 
         compare_tokens(kinds, src);
@@ -92,6 +93,7 @@ mod test {
             tk::LShiftEquals,
             tk::RShiftEquals,
             tk::StarStarEquals,
+            tk::NewLine,
         ];
 
         compare_tokens(kinds, src);
