@@ -2,8 +2,10 @@
 
 ## Basic types
 
-- `int` - This maps directly to the wasm type `i32` 
-- `int64` - This maps directly to the wasm type `i64`
+- `int` - This maps directly to the wasm type `i32` , signed
+- `int64` - This maps directly to the wasm type `i64`, signed
+- `uint` - This maps directly to the wasm type `i32` , unsigned
+- `uint64` - This maps directly to the wasm type `i64`, unsigned
 - `bool` - Boolean type. Literal names are `True` and `False`. In WASM, booleans are just integers `0` and `1`
 - `float` - This maps directly to the wasm type `f32`
 - `float64` - This maps directly to the wasm type `f64`
