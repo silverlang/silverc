@@ -266,7 +266,7 @@ impl<'a> Iterator for Lexer<'a> {
                     kind: Indent,
                     span: Span::new(self.line_start_idx, self.line_start_idx),
                 });
-            } else if indent_level < *self.indentation_stack.last()? {
+            } else if self.indentation_stack.contains(&indent_level) {
                 let remaining_stack: Vec<usize> = self
                     .indentation_stack
                     .iter()
@@ -293,6 +293,9 @@ impl<'a> Iterator for Lexer<'a> {
                 if let Some(token) = self.token_queue.pop_front() {
                     return Some(token);
                 }
+            } else {
+                // TODO: make a proper error for this
+                panic!("Inconsistent dedent");
             }
         }
 
