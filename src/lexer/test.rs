@@ -40,6 +40,38 @@ mod test {
         );
     }
 
+    fn compare_tokens_and_span<T>(expected: T, source_code: &str)
+    where
+        T: IntoIterator<Item = (tk, usize, usize)>,
+    {
+        let lexer = Lexer::new(&source_code);
+
+        let output_toks: Vec<Token> = lexer.collect();
+
+        for ((i, (_, exp_span_start, exp_span_len)), out_tok) in
+            expected.into_iter().enumerate().zip(output_toks.iter())
+        {
+            assert_eq!(
+                exp_span_start, out_tok.span.start_idx,
+                "test[{}] - span start wrong. expected={:?}, got={:?}",
+                i, exp_span_start, out_tok.span.start_idx
+            );
+            assert_eq!(
+                exp_span_start + exp_span_len,
+                out_tok.span.end_idx,
+                "test[{}] - span end wrong. expected={:?}, got={:?}",
+                i,
+                exp_span_start + exp_span_len,
+                out_tok.span.end_idx
+            );
+            assert_eq!(
+                exp_span_len, out_tok.span.len,
+                "test[{}] - span len wrong. expected={:?}, got={:?}",
+                i, exp_span_len, out_tok.span.len
+            );
+        }
+    }
+
     // TODO: Add test function for testing spans and not just TokenKind
 
     #[test]
@@ -247,5 +279,20 @@ print(one)"#;
         ];
 
         compare_tokens(kinds, src);
+    }
+
+    #[test]
+    fn tok_lens() {
+        let src = r#"let i = true"#;
+
+        let tok_start_and_len = vec![
+            (tk::Identifier("let".into()), 0, 3),
+            (tk::Identifier("i".into()), 4, 1),
+            (tk::Equals, 6, 1),
+            (tk::Identifier("true".into()), 8, 4),
+            (tk::NewLine, 12, 1),
+        ];
+
+        compare_tokens_and_span(tok_start_and_len, src);
     }
 }
