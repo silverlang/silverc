@@ -195,6 +195,22 @@ impl<'a> Cursor<'a> {
             }
         }
     }
+
+    pub fn skip_whitespace(&mut self) -> usize {
+        let mut indent_level = 0;
+
+        while let Some((_, char)) = self.source.peek() {
+            match char {
+                ' ' => {
+                    self.source.next();
+                    indent_level += 1;
+                }
+                _ => break,
+            }
+        }
+
+        return indent_level;
+    }
 }
 
 pub struct Lexer<'a> {
@@ -210,6 +226,12 @@ pub struct Lexer<'a> {
     custom_rules: &'a [LexerRule],
 
     token_queue: VecDeque<Token>,
+
+    /// Indentation is meant to work exactly like [Python indentation](https://docs.python.org/3/reference/lexical_analysis.html#indentation).
+    indentation_stack: Vec<usize>,
+
+    is_line_start: bool,
+    line_start_idx: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -219,6 +241,9 @@ impl<'a> Lexer<'a> {
             custom_rules: rules::LEXER_RULES,
             src: source_code,
             token_queue: VecDeque::new(),
+            indentation_stack: vec![0],
+            is_line_start: true,
+            line_start_idx: 0,
         }
     }
 }
@@ -230,20 +255,51 @@ impl<'a> Iterator for Lexer<'a> {
             return Some(token);
         }
 
-        let mut end_idx: usize;
-        let mut start_idx: usize;
-        let mut char: char;
+        let indent_level = self.cursor.skip_whitespace();
 
-        loop {
-            (end_idx, char) = self.cursor.source.next()?;
-            start_idx = end_idx;
+        if self.is_line_start {
+            if indent_level > *self.indentation_stack.last()? {
+                self.is_line_start = false;
+                self.indentation_stack.push(indent_level);
 
-            if char == ' ' {
-                continue;
+                return Some(Token {
+                    kind: Indent,
+                    span: Span::new(self.line_start_idx, self.line_start_idx),
+                });
+            } else if indent_level < *self.indentation_stack.last()? {
+                let remaining_stack: Vec<usize> = self
+                    .indentation_stack
+                    .iter()
+                    .filter_map(|stacked_indent| {
+                        if stacked_indent <= &indent_level {
+                            Some(*stacked_indent)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                let popped_count = self.indentation_stack.len() - remaining_stack.len();
+
+                for _ in 0..popped_count {
+                    self.token_queue.push_back(Token {
+                        kind: Dedent,
+                        span: Span::new(self.line_start_idx, self.line_start_idx),
+                    })
+                }
+
+                self.indentation_stack = remaining_stack;
+
+                if let Some(token) = self.token_queue.pop_front() {
+                    return Some(token);
+                }
             }
-
-            break;
         }
+
+        self.is_line_start = false;
+        let (end_idx, char) = self.cursor.source.next()?;
+        let mut end_idx = end_idx;
+        let start_idx = end_idx;
 
         let token_kind = match char {
             char if is_ident_start(char) => {
@@ -397,7 +453,11 @@ impl<'a> Iterator for Lexer<'a> {
                 _ => Not,
             },
             '@' => At,
-            '\n' => NewLine,
+            '\n' => {
+                self.is_line_start = true;
+                self.line_start_idx = start_idx + 1;
+                NewLine
+            }
             _ => Unknown,
         };
 
@@ -407,7 +467,14 @@ impl<'a> Iterator for Lexer<'a> {
             self.token_queue.push_back(Token {
                 kind: NewLine,
                 span: Span::new(end_idx + 1, end_idx + 2),
-            })
+            });
+
+            for _ in 0..self.indentation_stack.len() - 1 {
+                self.token_queue.push_back(Token {
+                    kind: Dedent,
+                    span: Span::new(end_idx + 2, end_idx + 2),
+                })
+            }
         }
 
         return Some(Token {
