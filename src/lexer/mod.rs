@@ -480,13 +480,13 @@ impl<'a> Iterator for Lexer<'a> {
         if self.cursor.chars.peek().is_none() {
             self.token_queue.push_back(Token {
                 kind: NewLine,
-                span: Span::new(self.cursor.idx + 1, self.cursor.idx + 2),
+                span: Span::new(self.cursor.idx, self.cursor.idx + 1),
             });
 
             for _ in 0..self.indentation_stack.len() - 1 {
                 self.token_queue.push_back(Token {
                     kind: Dedent,
-                    span: Span::new(self.cursor.idx + 2, self.cursor.idx + 2),
+                    span: Span::new(self.cursor.idx + 1, self.cursor.idx + 1),
                 })
             }
         }
