@@ -232,4 +232,20 @@ print(one)"#;
 
         compare_tokens(kinds, src);
     }
+
+    #[test]
+    fn comment() {
+        let src = r#"let i = true # This is a comment"#;
+
+        let kinds = vec![
+            tk::Identifier("let".into()),
+            tk::Identifier("i".into()),
+            tk::Equals,
+            tk::Identifier("true".into()),
+            tk::Comment,
+            tk::NewLine,
+        ];
+
+        compare_tokens(kinds, src);
+    }
 }
