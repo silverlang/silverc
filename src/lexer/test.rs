@@ -3,7 +3,12 @@ mod test {
     use crate::lexer::TokenKind as tk;
     use crate::lexer::{Lexer, Token, TokenKind};
 
-    fn compare_tokens(expected_kinds: &[TokenKind], source_code: &str) {
+    fn compare_tokens<T>(expected_kinds: T, source_code: &str)
+    where
+        T: IntoIterator<Item = tk>,
+    {
+        let expected_kinds: Vec<tk> = expected_kinds.into_iter().collect();
+
         let lexer = Lexer::new(&source_code);
 
         let output_toks: Vec<Token> = lexer.collect();
@@ -40,7 +45,7 @@ mod test {
     #[test]
     fn math_tokens() {
         let src = "+-*/";
-        let kinds = &[tk::Plus, tk::Minus, tk::Star, tk::Slash, tk::NewLine];
+        let kinds = vec![tk::Plus, tk::Minus, tk::Star, tk::Slash, tk::NewLine];
 
         compare_tokens(kinds, src);
     }
@@ -48,7 +53,7 @@ mod test {
     #[test]
     fn one_char_tokens() {
         let src = "()[]{}:;.,+-*/%^&|~=<>!@";
-        let kinds = &[
+        let kinds = vec![
             tk::LParen,
             tk::RParen,
             tk::LBracket,
@@ -82,7 +87,7 @@ mod test {
     #[test]
     fn multi_char_tokens() {
         let src = "-> == != <= >= << >> ** += -= *= /= %= &= |= ^= <<= >>= **=";
-        let kinds = &[
+        let kinds = vec![
             tk::RArrow,
             tk::EqualsEquals,
             tk::NotEquals,
@@ -112,7 +117,7 @@ mod test {
     fn basic_program() {
         let src = r#"one = 1
 print(one)"#;
-        let kinds = &[
+        let kinds = vec![
             tk::Identifier("one".into()),
             tk::Equals,
             tk::IntegerLiteral("1".into()),
@@ -134,7 +139,7 @@ print(one)"#;
 +
     +"#;
 
-        let kinds = &[
+        let kinds = vec![
             tk::Plus,
             tk::NewLine,
             tk::Indent,
@@ -157,7 +162,7 @@ print(one)"#;
         let src = r#"def hello():
     print("Hello world!")"#;
 
-        let kinds = &[
+        let kinds = vec![
             tk::Identifier("def".into()),
             tk::Identifier("hello".into()),
             tk::LParen,
@@ -182,7 +187,7 @@ print(one)"#;
     if number == 5:
         print("It is five!")"#;
 
-        let kinds = &[
+        let kinds = vec![
             tk::Identifier("def".into()),
             tk::Identifier("print_if_five".into()),
             tk::LParen,
@@ -216,7 +221,7 @@ print(one)"#;
     fn valid_ident_names() {
         let src = r#"valid _valid __valid v4l1d valid_als0 1nvalid"#;
 
-        let kinds = &[
+        let kinds = vec![
             tk::Identifier("valid".into()),
             tk::Identifier("_valid".into()),
             tk::Identifier("__valid".into()),
