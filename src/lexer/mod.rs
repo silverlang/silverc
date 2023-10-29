@@ -171,12 +171,14 @@ use self::TokenKind::*;
 
 pub struct Cursor<'a> {
     chars: Peekable<Enumerate<Chars<'a>>>,
+    idx: usize,
 }
 
 impl<'a> Cursor<'a> {
     pub fn new(source_code: &'a str) -> Cursor<'a> {
         Cursor {
             chars: source_code.chars().enumerate().peekable(),
+            idx: 0,
         }
     }
 
@@ -192,11 +194,20 @@ impl<'a> Cursor<'a> {
             };
 
             if predicate(char.1) {
-                chars.push(self.chars.next().unwrap().1);
+                chars.push(self.bump().unwrap());
             } else {
                 return chars;
             }
         }
+    }
+
+    /// Advances to the next character.
+    pub fn bump(&mut self) -> Option<char> {
+        let c = self.chars.next()?;
+
+        self.idx += 1;
+
+        return Some(c.1);
     }
 
     pub fn skip_whitespace(&mut self) -> usize {
@@ -205,7 +216,7 @@ impl<'a> Cursor<'a> {
         while let Some((_, char)) = self.chars.peek() {
             match char {
                 ' ' => {
-                    self.chars.next();
+                    self.bump();
                     indent_level += 1;
                 }
                 _ => break,
@@ -298,9 +309,8 @@ impl<'a> Iterator for Lexer<'a> {
         }
 
         self.is_line_start = false;
-        let (end_idx, char) = self.cursor.chars.next()?;
-        let mut end_idx = end_idx;
-        let start_idx = end_idx;
+        let start_idx = self.cursor.idx;
+        let char = self.cursor.bump()?;
 
         let token_kind = match char {
             '#' => {
@@ -310,7 +320,6 @@ impl<'a> Iterator for Lexer<'a> {
             }
             char if is_ident_start(char) => {
                 let mut chars: Vec<char> = self.cursor.take_while(is_ident_body);
-                end_idx = end_idx + chars.len();
 
                 chars.insert(0, char);
 
@@ -319,7 +328,6 @@ impl<'a> Iterator for Lexer<'a> {
             }
             char @ '0'..='9' => {
                 let mut chars: Vec<char> = self.cursor.take_while(is_digit);
-                end_idx = end_idx + chars.len();
 
                 chars.insert(0, char);
 
@@ -328,33 +336,33 @@ impl<'a> Iterator for Lexer<'a> {
             }
             '+' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     PlusEquals
                 }
                 _ => Plus,
             },
             '-' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     MinusEquals
                 }
                 Some((_, '>')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     RArrow
                 }
                 _ => Minus,
             },
             '*' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     StarEquals
                 }
                 Some((_, '*')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
 
                     match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.chars.next()?;
+                            self.cursor.bump()?;
                             StarStarEquals
                         }
                         _ => StarStar,
@@ -364,7 +372,7 @@ impl<'a> Iterator for Lexer<'a> {
             },
             '/' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     SlashEquals
                 }
                 _ => Slash,
@@ -381,28 +389,28 @@ impl<'a> Iterator for Lexer<'a> {
             ',' => Comma,
             '%' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     PercentEquals
                 }
                 _ => Percent,
             },
             '^' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     CaretEquals
                 }
                 _ => Caret,
             },
             '&' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     AmperEquals
                 }
                 _ => Amper,
             },
             '|' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     PipeEquals
                 }
                 _ => Pipe,
@@ -410,22 +418,22 @@ impl<'a> Iterator for Lexer<'a> {
             '~' => Tilde,
             '=' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     EqualsEquals
                 }
                 _ => Equals,
             },
             '<' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     LessEquals
                 }
                 Some((_, '<')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
 
                     match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.chars.next()?;
+                            self.cursor.bump()?;
                             LShiftEquals
                         }
                         _ => LShift,
@@ -435,15 +443,15 @@ impl<'a> Iterator for Lexer<'a> {
             },
             '>' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     GreaterEquals
                 }
                 Some((_, '>')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
 
                     match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.chars.next()?;
+                            self.cursor.bump()?;
                             RShiftEquals
                         }
                         _ => RShift,
@@ -453,7 +461,7 @@ impl<'a> Iterator for Lexer<'a> {
             },
             '!' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.chars.next()?;
+                    self.cursor.bump()?;
                     NotEquals
                 }
                 _ => Not,
@@ -467,18 +475,18 @@ impl<'a> Iterator for Lexer<'a> {
             _ => Unknown,
         };
 
-        let span = Span::new(start_idx, end_idx + 1);
+        let span = Span::new(start_idx, self.cursor.idx);
 
         if self.cursor.chars.peek().is_none() {
             self.token_queue.push_back(Token {
                 kind: NewLine,
-                span: Span::new(end_idx + 1, end_idx + 2),
+                span: Span::new(self.cursor.idx + 1, self.cursor.idx + 2),
             });
 
             for _ in 0..self.indentation_stack.len() - 1 {
                 self.token_queue.push_back(Token {
                     kind: Dedent,
-                    span: Span::new(end_idx + 2, end_idx + 2),
+                    span: Span::new(self.cursor.idx + 2, self.cursor.idx + 2),
                 })
             }
         }
