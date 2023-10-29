@@ -1,4 +1,5 @@
 /// Represents a region in a source code, useful for error reporting.
+#[derive(Debug)]
 pub struct Span {
     pub start_idx: usize,
     pub end_idx: usize,

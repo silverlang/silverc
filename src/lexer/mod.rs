@@ -1,5 +1,6 @@
 use std::{
     collections::VecDeque,
+    fmt,
     iter::{Enumerate, Peekable},
     str::Chars,
 };
@@ -17,7 +18,19 @@ pub struct Token {
     pub span: Span,
 }
 
-#[cfg_attr(test, derive(PartialEq, Debug))]
+impl fmt::Debug for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let pos = format!(
+            "{}-{},{}:",
+            self.span.start_idx, self.span.end_idx, self.span.len,
+        );
+        let pos = format!("{: <9}", pos);
+        write!(f, "{} {:?}", pos, self.kind,)
+    }
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(Debug)]
 pub enum TokenKind {
     /// "# comment"
     Comment,
