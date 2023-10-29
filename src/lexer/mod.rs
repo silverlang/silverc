@@ -167,13 +167,13 @@ pub enum TokenKind {
 use self::TokenKind::*;
 
 pub struct Cursor<'a> {
-    source: Peekable<Enumerate<Chars<'a>>>,
+    chars: Peekable<Enumerate<Chars<'a>>>,
 }
 
 impl<'a> Cursor<'a> {
     pub fn new(source_code: &'a str) -> Cursor<'a> {
         Cursor {
-            source: source_code.chars().enumerate().peekable(),
+            chars: source_code.chars().enumerate().peekable(),
         }
     }
 
@@ -183,13 +183,13 @@ impl<'a> Cursor<'a> {
         let mut chars = Vec::new();
 
         loop {
-            let Some(char) = self.source.peek()
+            let Some(char) = self.chars.peek()
             else {
                 return chars;
             };
 
             if predicate(char.1) {
-                chars.push(self.source.next().unwrap().1);
+                chars.push(self.chars.next().unwrap().1);
             } else {
                 return chars;
             }
@@ -199,10 +199,10 @@ impl<'a> Cursor<'a> {
     pub fn skip_whitespace(&mut self) -> usize {
         let mut indent_level = 0;
 
-        while let Some((_, char)) = self.source.peek() {
+        while let Some((_, char)) = self.chars.peek() {
             match char {
                 ' ' => {
-                    self.source.next();
+                    self.chars.next();
                     indent_level += 1;
                 }
                 _ => break,
@@ -295,7 +295,7 @@ impl<'a> Iterator for Lexer<'a> {
         }
 
         self.is_line_start = false;
-        let (end_idx, char) = self.cursor.source.next()?;
+        let (end_idx, char) = self.cursor.chars.next()?;
         let mut end_idx = end_idx;
         let start_idx = end_idx;
 
@@ -318,35 +318,35 @@ impl<'a> Iterator for Lexer<'a> {
                 let int_str = String::from_iter(&chars);
                 IntegerLiteral(int_str)
             }
-            '+' => match self.cursor.source.peek() {
+            '+' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     PlusEquals
                 }
                 _ => Plus,
             },
-            '-' => match self.cursor.source.peek() {
+            '-' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     MinusEquals
                 }
                 Some((_, '>')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     RArrow
                 }
                 _ => Minus,
             },
-            '*' => match self.cursor.source.peek() {
+            '*' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     StarEquals
                 }
                 Some((_, '*')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
 
-                    match self.cursor.source.peek() {
+                    match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.source.next()?;
+                            (end_idx, _) = self.cursor.chars.next()?;
                             StarStarEquals
                         }
                         _ => StarStar,
@@ -354,9 +354,9 @@ impl<'a> Iterator for Lexer<'a> {
                 }
                 _ => Star,
             },
-            '/' => match self.cursor.source.peek() {
+            '/' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     SlashEquals
                 }
                 _ => Slash,
@@ -371,53 +371,53 @@ impl<'a> Iterator for Lexer<'a> {
             ';' => Semi,
             '.' => Dot,
             ',' => Comma,
-            '%' => match self.cursor.source.peek() {
+            '%' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     PercentEquals
                 }
                 _ => Percent,
             },
-            '^' => match self.cursor.source.peek() {
+            '^' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     CaretEquals
                 }
                 _ => Caret,
             },
-            '&' => match self.cursor.source.peek() {
+            '&' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     AmperEquals
                 }
                 _ => Amper,
             },
-            '|' => match self.cursor.source.peek() {
+            '|' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     PipeEquals
                 }
                 _ => Pipe,
             },
             '~' => Tilde,
-            '=' => match self.cursor.source.peek() {
+            '=' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     EqualsEquals
                 }
                 _ => Equals,
             },
-            '<' => match self.cursor.source.peek() {
+            '<' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     LessEquals
                 }
                 Some((_, '<')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
 
-                    match self.cursor.source.peek() {
+                    match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.source.next()?;
+                            (end_idx, _) = self.cursor.chars.next()?;
                             LShiftEquals
                         }
                         _ => LShift,
@@ -425,17 +425,17 @@ impl<'a> Iterator for Lexer<'a> {
                 }
                 _ => Less,
             },
-            '>' => match self.cursor.source.peek() {
+            '>' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     GreaterEquals
                 }
                 Some((_, '>')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
 
-                    match self.cursor.source.peek() {
+                    match self.cursor.chars.peek() {
                         Some((_, '=')) => {
-                            (end_idx, _) = self.cursor.source.next()?;
+                            (end_idx, _) = self.cursor.chars.next()?;
                             RShiftEquals
                         }
                         _ => RShift,
@@ -443,9 +443,9 @@ impl<'a> Iterator for Lexer<'a> {
                 }
                 _ => Greater,
             },
-            '!' => match self.cursor.source.peek() {
+            '!' => match self.cursor.chars.peek() {
                 Some((_, '=')) => {
-                    (end_idx, _) = self.cursor.source.next()?;
+                    (end_idx, _) = self.cursor.chars.next()?;
                     NotEquals
                 }
                 _ => Not,
@@ -461,7 +461,7 @@ impl<'a> Iterator for Lexer<'a> {
 
         let span = Span::new(start_idx, end_idx + 1);
 
-        if self.cursor.source.peek().is_none() {
+        if self.cursor.chars.peek().is_none() {
             self.token_queue.push_back(Token {
                 kind: NewLine,
                 span: Span::new(end_idx + 1, end_idx + 2),
