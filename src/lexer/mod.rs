@@ -270,13 +270,8 @@ impl<'a> Iterator for Lexer<'a> {
                 let remaining_stack: Vec<usize> = self
                     .indentation_stack
                     .iter()
-                    .filter_map(|stacked_indent| {
-                        if stacked_indent <= &indent_level {
-                            Some(*stacked_indent)
-                        } else {
-                            None
-                        }
-                    })
+                    .take_while(|i| i <= &&indent_level)
+                    .map(|i| *i)
                     .collect();
 
                 let popped_count = self.indentation_stack.len() - remaining_stack.len();
