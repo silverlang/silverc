@@ -19,6 +19,9 @@ pub struct Token {
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum TokenKind {
+    /// "# comment"
+    Comment,
+
     Identifier(String),
     IntegerLiteral(String),
     StringLiteral(String),
@@ -300,6 +303,11 @@ impl<'a> Iterator for Lexer<'a> {
         let start_idx = end_idx;
 
         let token_kind = match char {
+            '#' => {
+                self.cursor.take_while(|c| c != '\n');
+                // TODO: get proper end_idx for this
+                Comment
+            }
             char if is_ident_start(char) => {
                 let mut chars: Vec<char> = self.cursor.take_while(is_ident_body);
                 end_idx = end_idx + chars.len();
